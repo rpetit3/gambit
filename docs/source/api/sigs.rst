@@ -9,18 +9,18 @@ gambit.seq
    .. autofunction:: gambit.seq.revcomp
 
 
-gambit.kmers
-------------
-
-.. automodule:: gambit.kmers
-
-   .. autofunction:: gambit.kmers.index_to_kmer
-
-
 gambit.sigs
------------------
+-----------
 
 .. automodule:: gambit.sigs
+
+
+gambit.sigs.kmers
+-----------------
+
+.. automodule:: gambit.sigs.kmers
+
+   .. autofunction:: gambit.sigs.kmers.index_to_kmer
 
 
 gambit.sigs.base

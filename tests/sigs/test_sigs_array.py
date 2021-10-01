@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 
 from gambit.sigs import SignatureArray, SignatureList
-from gambit.kmers import KmerSpec
+from gambit.sigs import KmerSpec
 from gambit.test import make_signatures
 from gambit.sigs.test import AbstractSignatureArrayTests
 

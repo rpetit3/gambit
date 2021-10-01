@@ -7,7 +7,7 @@ import numpy as np
 from gambit.sigs.hdf5 import HDF5Signatures, read_metadata, write_metadata
 from gambit.sigs import SignaturesMeta, SignatureList
 from gambit.sigs.test import AbstractSignatureArrayTests
-from gambit.kmers import KmerSpec
+from gambit.sigs import KmerSpec
 from gambit.test import make_signatures
 
 

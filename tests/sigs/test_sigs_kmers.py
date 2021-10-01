@@ -1,11 +1,11 @@
-"""Tests for gambit.kmers module."""
+"""Tests for gambit.sigs.kmers module."""
 
 import pytest
 import numpy as np
 
+from gambit.sigs import kmers
+from gambit.sigs.kmers import KmerSpec
 from gambit.seq import SEQ_TYPES, NUCLEOTIDES, revcomp
-from gambit import kmers
-from gambit.kmers import KmerSpec
 import gambit.io.json as gjson
 from gambit.test import convert_seq, make_kmer_seq
 
@@ -60,7 +60,7 @@ class TestIndices:
 
 
 class TestKmerSpec:
-	"""Test gambit.kmers.KmerSpec."""
+	"""Test gambit.sigs.kmers.KmerSpec."""
 
 	def test_constructor(self):
 		# Prefix conversion

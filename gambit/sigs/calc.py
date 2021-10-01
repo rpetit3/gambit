@@ -9,7 +9,7 @@ import numpy as np
 
 from .base import KmerSignature
 from .array import SignatureList
-from gambit.kmers import KmerSpec, find_kmers, kmer_to_index, nkmers, index_dtype
+from .kmers import KmerSpec, find_kmers, kmer_to_index, nkmers, index_dtype
 from gambit.seq import SEQ_TYPES, DNASeq
 from gambit.io.seq import SequenceFile
 from gambit.util.progress import iter_progress, get_progress
@@ -202,7 +202,7 @@ def calc_file_signature(kspec: KmerSpec,
 	-------
 	numpy.ndarray
 		K-mer signature in sparse coordinate format (dtype will match
-		:func:`gambit.kmers.dense_to_sparse`).
+		:func:`gambit.sigs.kmers.dense_to_sparse`).
 
 	See Also
 	--------

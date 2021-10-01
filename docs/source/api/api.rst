@@ -4,7 +4,7 @@ Python API
 .. toctree::
    :maxdepth: 2
 
-   kmers
+   sigs
    metric
    database
    query

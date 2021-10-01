@@ -6,7 +6,7 @@ import click
 #: Modules to import in interactive shell.
 SHELL_MODULES = dict(
 	metric='gambit.metric',
-	kmers='gambit.kmers',
+	kmers='gambit.sigs.kmers',
 )
 
 

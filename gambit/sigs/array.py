@@ -5,7 +5,7 @@ from typing import Sequence, Optional, Iterable, MutableSequence, Union
 import numpy as np
 
 from .base import KmerSignature
-from gambit.kmers import KmerSpec
+from .kmers import KmerSpec
 from gambit._cython.metric import BOUNDS_DTYPE
 from gambit.util.indexing import AdvancedIndexingMixin
 

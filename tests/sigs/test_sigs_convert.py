@@ -5,7 +5,7 @@ import numpy as np
 
 from gambit.sigs.convert import dense_to_sparse, sparse_to_dense, can_convert, \
 	check_can_convert, convert_dense, convert_sparse
-from gambit.kmers import KmerSpec
+from gambit.sigs import KmerSpec
 from gambit.test import random_seq
 
 

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 import numpy as np
 
-from gambit.kmers import KmerSpec, kmer_to_index
+from gambit.sigs.kmers import KmerSpec, kmer_to_index
 from gambit.seq import seq_to_bytes, revcomp
 from gambit.sigs import KmerSignature, SignatureArray
 from gambit.sigs.convert import dense_to_sparse, sparse_to_dense

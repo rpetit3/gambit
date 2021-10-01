@@ -1,7 +1,7 @@
 """Test the gambit.seqs module."""
 
 from gambit.seq import revcomp
-from gambit.kmers import nkmers, index_to_kmer
+from gambit.sigs.kmers import nkmers, index_to_kmer
 
 
 # Complements to nucleotide ASCII codes
