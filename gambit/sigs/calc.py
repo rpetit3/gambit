@@ -1,18 +1,23 @@
 """Calculate k-mer signatures from sequence data."""
 
-from typing import Optional, Sequence, MutableSet, Union, Iterable
+from typing import Optional, Sequence, MutableSet, Union, Iterable, Callable
 from abc import abstractmethod
 from concurrent.futures import Executor, ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from contextlib import nullcontext
 
 import numpy as np
+from Bio.SeqIO import SeqRecord
 
 from .base import KmerSignature
 from .array import SignatureList
-from gambit.kmers import KmerSpec, find_kmers, kmer_to_index, nkmers, index_dtype
+from gambit.kmers import KmerSpec, KmerMatch, find_kmers, kmer_to_index, nkmers, index_dtype
 from gambit.seq import SEQ_TYPES, DNASeq
 from gambit.io.seq import SequenceFile
 from gambit.util.progress import iter_progress, get_progress
+
+
+KmerFilter = Callable[[KmerMatch], bool]
+SeqRecordKmerFilter = Callable[[SeqRecord, KmerMatch], bool]
 
 
 class KmerAccumulator(MutableSet[int]):
@@ -129,20 +134,27 @@ def default_accumulator(k: int) -> KmerAccumulator:
 	return SetAccumulator(k) if k > 11 else ArrayAccumulator(k)
 
 
-def accumulate_kmers(accumulator: KmerAccumulator, kmerspec: KmerSpec, seq: DNASeq):
+def accumulate_kmers(accumulator: KmerAccumulator,
+                     kmerspec: KmerSpec,
+                     seq: DNASeq,
+                     filter: Optional[KmerFilter],
+                     ):
 	"""Find k-mer matches in sequence and add their indices to an accumulator."""
 	for match in find_kmers(kmerspec, seq):
 		try:
 			index = match.kmer_index()
 		except ValueError:
-			continue
-		accumulator.add(index)
+			continue  # Invalid character
+
+		if filter is None or filter(match):
+			accumulator.add(index)
 
 
 def calc_signature(kmerspec: KmerSpec,
                    seqs: Union[DNASeq, Iterable[DNASeq]],
                    *,
                    accumulator: Optional[KmerAccumulator] = None,
+                   filter: Optional[KmerFilter] = None,
                    ) -> KmerSignature:
 	"""Calculate the k-mer signature of a DNA sequence or set of sequences.
 
@@ -156,6 +168,8 @@ def calc_signature(kmerspec: KmerSpec,
 	seqs
 		Sequence or sequences to search within. Lowercase characters are OK.
 	accumulator
+		TODO
+	filter
 		TODO
 
 	Returns
@@ -174,15 +188,18 @@ def calc_signature(kmerspec: KmerSpec,
 		accumulator = default_accumulator(kmerspec.k)
 
 	for seq in seqs:
-		accumulate_kmers(accumulator, kmerspec, seq)
+		accumulate_kmers(accumulator, kmerspec, seq, filter=filter)
 
 	return accumulator.signature()
+
 
 
 def calc_file_signature(kspec: KmerSpec,
                         seqfile: SequenceFile,
                         *,
                         accumulator: Optional[KmerAccumulator] = None,
+                        filter: Optional[KmerFilter] = None,
+                        record_filter: Optional[SeqRecordKmerFilter] = None,
                         ) -> KmerSignature:
 	"""Open a sequence file on disk and calculate its k-mer signature.
 
@@ -197,6 +214,10 @@ def calc_file_signature(kspec: KmerSpec,
 		File to read.
 	accumulator
 		TODO
+	filter
+		TODO
+	record_filter
+		TODO
 
 	Returns
 	-------
@@ -209,12 +230,29 @@ def calc_file_signature(kspec: KmerSpec,
 	.calc_signature
 	.calc_file_signatures
 	"""
+
+	if accumulator is None:
+		accumulator = default_accumulator(kspec.k)
+
 	with seqfile.parse() as records:
-		return calc_signature(kspec, (record.seq for record in records))
+		for record in records:
+			if filter is not None:
+				thisfilter = filter
+			elif record_filter is not None:
+				thisfilter = lambda match: record_filter(record, match)
+			else:
+				thisfilter = None
+
+			accumulate_kmers(accumulator, kspec, record.seq, filter=thisfilter)
+
+	return accumulator.signature()
 
 
 def calc_file_signatures(kspec: KmerSpec,
                          files: Sequence[SequenceFile],
+                         *,
+                         filter: Optional[KmerFilter] = None,
+                         record_filter: Optional[SeqRecordKmerFilter] = None,
                          progress=None,
                          concurrency: Optional[str] = 'threads',
                          max_workers: Optional[int] = None,
@@ -228,6 +266,10 @@ def calc_file_signatures(kspec: KmerSpec,
 		Spec for k-mer search.
 	seqfile
 		Files to read.
+	filter
+		TODO
+	record_filter
+		TODO
 	progress
 		Display a progress meter. See :func:`gambit.util.progress.get_progress` for allowed values.
 	concurrency
@@ -261,7 +303,7 @@ def calc_file_signatures(kspec: KmerSpec,
 
 		with iter_progress(files, progress) as file_itr:
 			for file in file_itr:
-				sigs.append(calc_file_signature(kspec, file))
+				sigs.append(calc_file_signature(kspec, file, filter=filter, record_filter=record_filter))
 
 	else:
 		sigs = [None] * len(files)
@@ -269,7 +311,7 @@ def calc_file_signatures(kspec: KmerSpec,
 
 		with executor_context, get_progress(progress, len(files)) as meter:
 			for i, file in enumerate(files):
-				future = executor.submit(calc_file_signature, kspec, file)
+				future = executor.submit(calc_file_signature, kspec, file, filter=filter, record_filter=record_filter)
 				future_to_index[future] = i
 
 			for future in as_completed(future_to_index):
